@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
   :root {
     --accent: #22e06b;
     --accent-deep: #0f8839;
@@ -20,24 +20,24 @@
     --text-dim: #a8a8b0;
     --text-faint: #6a6a72;
     --red: #ef4444;
-
+ 
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     --display: 'Anton', sans-serif;
     --body: 'Inter Tight', system-ui, sans-serif;
   }
-
+ 
   body[data-leader="blisy"] {
     --accent: #3b82f6;
     --accent-deep: #1d4ed8;
     --accent-glow: rgba(59, 130, 246, 0.4);
   }
-
+ 
   body[data-leader="nexus"] {
     --accent: #fde047;
     --accent-deep: #ca8a04;
     --accent-glow: rgba(253, 224, 71, 0.5);
   }
-
+ 
   html, body {
     width: 100%;
     height: 100%;
@@ -46,7 +46,7 @@
     font-family: var(--body);
     -webkit-font-smoothing: antialiased;
   }
-
+ 
   /* Position wrapper */
   .overlay {
     position: fixed;
@@ -54,18 +54,18 @@
     padding: 18px;
     transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
   }
-
+ 
   .overlay[data-position="bl"] { bottom: 0; left: 0; }
   .overlay[data-position="br"] { bottom: 0; right: 0; }
   .overlay[data-position="tl"] { top: 0; left: 0; }
   .overlay[data-position="tr"] { top: 0; right: 0; }
-
+ 
   /* Slide animations per position */
   .overlay[data-position="bl"].is-hidden { transform: translateX(-110%); opacity: 0; }
   .overlay[data-position="br"].is-hidden { transform: translateX(110%); opacity: 0; }
   .overlay[data-position="tl"].is-hidden { transform: translateX(-110%); opacity: 0; }
   .overlay[data-position="tr"].is-hidden { transform: translateX(110%); opacity: 0; }
-
+ 
   /* Card */
   .card {
     position: relative;
@@ -85,7 +85,7 @@
     overflow: hidden;
     isolation: isolate;
   }
-
+ 
   /* Accent top bar */
   .card::before {
     content: '';
@@ -98,7 +98,7 @@
     box-shadow: 0 0 12px var(--accent-glow);
     z-index: 5;
   }
-
+ 
   /* Subtle accent aura inside card */
   .card::after {
     content: '';
@@ -109,7 +109,7 @@
     pointer-events: none;
     z-index: 0;
   }
-
+ 
   /* ===== IMAGE SIDE ===== */
   .image-slot {
     position: relative;
@@ -124,7 +124,7 @@
     justify-content: center;
     z-index: 1;
   }
-
+ 
   .image-slot::before {
     content: '';
     position: absolute;
@@ -133,7 +133,7 @@
     opacity: 0.15;
     z-index: 1;
   }
-
+ 
   .image-slot::after {
     content: '';
     position: absolute;
@@ -144,22 +144,27 @@
     background-size: 14px 14px;
     z-index: 1;
   }
-
+ 
   .product-image {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
     z-index: 3;
     max-width: 86%;
     max-height: 86%;
     object-fit: contain;
     filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5)) drop-shadow(0 0 14px var(--accent-glow));
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 900ms ease, transform 1800ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
   }
-
+ 
   .product-image.is-visible {
     opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
   }
-
+ 
   /* ===== ATMOSPHERE ===== */
   .atmosphere {
     position: absolute;
@@ -168,7 +173,7 @@
     pointer-events: none;
     overflow: hidden;
   }
-
+ 
   /* Grass leaves */
   body[data-leader="pokeaim"] .atmosphere-item {
     position: absolute;
@@ -184,14 +189,14 @@
   body[data-leader="pokeaim"] .atmosphere-item:nth-child(3) { top: -10px; left: 75%; animation: leaf-fall 8s infinite linear; animation-delay: 3s; }
   body[data-leader="pokeaim"] .atmosphere-item:nth-child(4) { top: -10px; left: 30%; animation: leaf-fall 10s infinite linear; animation-delay: 4.5s; }
   body[data-leader="pokeaim"] .atmosphere-item:nth-child(5) { top: -10px; left: 60%; animation: leaf-fall 8.5s infinite linear; animation-delay: 6s; }
-
+ 
   @keyframes leaf-fall {
     0% { transform: translateY(0) rotate(0); opacity: 0; }
     10% { opacity: 0.7; }
     90% { opacity: 0.7; }
     100% { transform: translateY(160px) rotate(540deg); opacity: 0; }
   }
-
+ 
   /* Water bubbles */
   body[data-leader="blisy"] .atmosphere-item {
     position: absolute;
@@ -205,7 +210,7 @@
   body[data-leader="blisy"] .atmosphere-item:nth-child(3) { left: 55%; width: 8px; height: 8px; animation: bubble-rise 7s infinite linear; animation-delay: 3s; }
   body[data-leader="blisy"] .atmosphere-item:nth-child(4) { left: 75%; width: 6px; height: 6px; animation: bubble-rise 9s infinite linear; animation-delay: 1s; }
   body[data-leader="blisy"] .atmosphere-item:nth-child(5) { left: 90%; width: 4px; height: 4px; animation: bubble-rise 10s infinite linear; animation-delay: 2.5s; }
-
+ 
   @keyframes bubble-rise {
     0% { transform: translateY(0) translateX(0); opacity: 0; }
     10% { opacity: 0.6; }
@@ -213,7 +218,7 @@
     90% { opacity: 0.6; }
     100% { transform: translateY(-180px) translateX(-4px); opacity: 0; }
   }
-
+ 
   /* Electric sparks */
   body[data-leader="nexus"] .atmosphere-item {
     position: absolute;
@@ -227,13 +232,13 @@
   body[data-leader="nexus"] .atmosphere-item:nth-child(3) { left: 75%; top: 30%; height: 20px; animation: spark-flash 6s infinite; animation-delay: 2s; }
   body[data-leader="nexus"] .atmosphere-item:nth-child(4) { left: 85%; top: 70%; height: 14px; animation: spark-flash 3.5s infinite; animation-delay: 0.5s; }
   body[data-leader="nexus"] .atmosphere-item:nth-child(5) { left: 40%; top: 15%; height: 10px; animation: spark-flash 4.5s infinite; animation-delay: 1.5s; }
-
+ 
   @keyframes spark-flash {
     0%, 100% { opacity: 0; }
     50%, 54% { opacity: 1; }
     52% { opacity: 0.3; }
   }
-
+ 
   /* ===== CONTENT SIDE ===== */
   .content {
     position: relative;
@@ -243,14 +248,14 @@
     min-width: 0;
     gap: 10px;
   }
-
+ 
   /* Team tag header */
   .team-row {
     display: flex;
     align-items: center;
     gap: 10px;
   }
-
+ 
   .team-badge {
     display: inline-flex;
     align-items: center;
@@ -261,14 +266,14 @@
     border-radius: 100px;
     box-shadow: 0 0 12px var(--accent-glow);
   }
-
+ 
   .team-icon {
     width: 11px;
     height: 11px;
     color: var(--accent);
     flex-shrink: 0;
   }
-
+ 
   .team-name {
     font-family: var(--mono);
     font-size: 9px;
@@ -277,7 +282,7 @@
     text-transform: uppercase;
     color: var(--text);
   }
-
+ 
   .live-pill {
     display: inline-flex;
     align-items: center;
@@ -293,7 +298,7 @@
     text-transform: uppercase;
     color: var(--red);
   }
-
+ 
   .live-dot {
     width: 5px;
     height: 5px;
@@ -302,12 +307,12 @@
     box-shadow: 0 0 6px var(--red);
     animation: pulse 1.5s infinite;
   }
-
+ 
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.3); }
   }
-
+ 
   /* Event headline */
   .event-headline {
     font-family: var(--display);
@@ -318,18 +323,18 @@
     color: var(--text);
     text-shadow: 0 0 16px var(--accent-glow);
   }
-
+ 
   .event-headline-accent {
     color: var(--accent);
   }
-
+ 
   /* Action rows */
   .actions {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
-
+ 
   .action-row {
     display: flex;
     align-items: center;
@@ -341,7 +346,7 @@
     letter-spacing: 0.02em;
     line-height: 1.3;
   }
-
+ 
   .action-bullet {
     width: 15px;
     height: 15px;
@@ -356,12 +361,12 @@
     flex-shrink: 0;
     box-shadow: 0 0 8px var(--accent-glow);
   }
-
+ 
   .action-text-accent {
     color: var(--accent);
     font-weight: 800;
   }
-
+ 
   /* Code box */
   .code-box {
     display: flex;
@@ -374,7 +379,7 @@
     position: relative;
     overflow: hidden;
   }
-
+ 
   .code-box::before {
     content: '';
     position: absolute;
@@ -384,12 +389,12 @@
     animation: code-shimmer 3.5s infinite;
     pointer-events: none;
   }
-
+ 
   @keyframes code-shimmer {
     0% { transform: translateX(-100%); }
     50%, 100% { transform: translateX(200%); }
   }
-
+ 
   .code-label {
     font-family: var(--mono);
     font-size: 9px;
@@ -399,7 +404,7 @@
     position: relative;
     z-index: 2;
   }
-
+ 
   .code-value {
     font-family: var(--mono);
     font-size: 14px;
@@ -410,7 +415,7 @@
     z-index: 2;
     text-shadow: 0 0 12px var(--accent-glow);
   }
-
+ 
   .code-percent {
     margin-left: auto;
     font-family: var(--mono);
@@ -424,7 +429,7 @@
     position: relative;
     z-index: 2;
   }
-
+ 
   /* Support line */
   .support-line {
     font-family: var(--mono);
@@ -436,7 +441,7 @@
     text-align: center;
     padding-top: 2px;
   }
-
+ 
   .support-line strong {
     color: var(--accent);
     font-weight: 800;
@@ -444,7 +449,7 @@
 </style>
 </head>
 <body data-leader="pokeaim">
-
+ 
 <div class="overlay is-hidden" data-position="bl">
   <div class="card">
     <!-- Image side -->
@@ -456,9 +461,10 @@
         <div class="atmosphere-item"></div>
         <div class="atmosphere-item"></div>
       </div>
-      <img class="product-image" data-product-image alt="Product">
+      <img class="product-image" data-product-image-a alt="Product">
+      <img class="product-image" data-product-image-b alt="Product">
     </div>
-
+ 
     <!-- Content side -->
     <div class="content">
       <div class="team-row">
@@ -473,12 +479,12 @@
           <span>LIVE DROP</span>
         </div>
       </div>
-
+ 
       <div class="event-headline">
         <span data-event-line-1>Gym Leaders</span><br>
         <span class="event-headline-accent" data-event-line-2>Champions Tournament</span>
       </div>
-
+ 
       <div class="actions">
         <div class="action-row">
           <div class="action-bullet">1</div>
@@ -489,24 +495,24 @@
           <span>Submit one <span class="action-text-accent">Pokemon</span> for my team</span>
         </div>
       </div>
-
+ 
       <div class="code-box">
         <span class="code-label">Code</span>
         <span class="code-value" data-code>POKEAIM</span>
         <span class="code-percent" data-percent>15% OFF</span>
       </div>
-
+ 
       <div class="support-line">
         <strong>100%</strong> of merch profits go directly to me
       </div>
     </div>
   </div>
 </div>
-
+ 
 <script>
 (function() {
   const params = new URLSearchParams(window.location.search);
-
+ 
   // Leader config
   const LEADERS = {
     pokeaim: {
@@ -543,86 +549,103 @@
       ]
     }
   };
-
+ 
   // Parse parameters
   const leaderKey = (params.get('leader') || 'pokeaim').toLowerCase();
   const leader = LEADERS[leaderKey] || LEADERS.pokeaim;
-
+ 
   const position = (params.get('position') || 'bl').toLowerCase();
   const percent = params.get('percent') || '15';
   const codeOverride = params.get('code');
   const always = params.get('always') === '1';
   const test = params.get('test') === '1';
-
+ 
   // Timing (seconds): 30s visible, 5 min (300s) hidden = 330s total between appearances
   const displayDuration = test ? 6 : 30;
   const cycleInterval = test ? 8 : 330;
-
+ 
   // Elements
   const body = document.body;
   const overlay = document.querySelector('.overlay');
-  const productImg = document.querySelector('[data-product-image]');
+  const productImgA = document.querySelector('[data-product-image-a]');
+  const productImgB = document.querySelector('[data-product-image-b]');
   const teamNameEl = document.querySelector('[data-team-name]');
   const teamIconEl = document.querySelector('[data-team-icon]');
   const codeEl = document.querySelector('[data-code]');
   const percentEl = document.querySelector('[data-percent]');
-
+ 
   // Apply leader theme
   body.dataset.leader = leaderKey;
   teamNameEl.textContent = leader.name;
   teamIconEl.innerHTML = leader.icon;
   codeEl.textContent = (codeOverride || leader.code).toUpperCase();
   percentEl.textContent = percent + '% OFF';
-
+ 
   // Position
   overlay.dataset.position = ['bl', 'br', 'tl', 'tr'].includes(position) ? position : 'bl';
-
-  // Product rotation
+ 
+  // Preload all product images so the first transition isn't a flash
+  leader.products.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+ 
+  // Crossfade state
   let productIndex = 0;
+  let activeSlot = 'a'; // which img is currently visible ('a' or 'b')
+ 
+  function loadProduct(index, immediate) {
+    const src = leader.products[index];
+    if (!src) return;
+ 
+    const currentEl = activeSlot === 'a' ? productImgA : productImgB;
+    const nextEl = activeSlot === 'a' ? productImgB : productImgA;
+ 
+    // Set the next slot's source, then preload before showing
+    const preload = new Image();
+    const show = () => {
+      nextEl.src = src;
+      // Force reflow so the transition applies
+      requestAnimationFrame(() => {
+        nextEl.classList.add('is-visible');
+        currentEl.classList.remove('is-visible');
+      });
+      activeSlot = activeSlot === 'a' ? 'b' : 'a';
+    };
+ 
+    if (immediate) {
+      // For initial load, just show without waiting
+      nextEl.src = src;
+      nextEl.classList.add('is-visible');
+      activeSlot = activeSlot === 'a' ? 'b' : 'a';
+    } else {
+      preload.onload = show;
+      preload.onerror = show; // fall back even if preload fails
+      preload.src = src;
+    }
+  }
+ 
   function cycleProduct() {
     productIndex = (productIndex + 1) % leader.products.length;
-    loadProduct(productIndex);
+    loadProduct(productIndex, false);
   }
-
-  function loadProduct(i) {
-    const src = leader.products[i];
-    if (!src) return;
-
-    // Fade out, swap image, fade in
-    productImg.classList.remove('is-visible');
-    const next = new Image();
-    next.onload = () => {
-      productImg.src = src;
-      requestAnimationFrame(() => {
-        productImg.classList.add('is-visible');
-      });
-    };
-    next.onerror = () => {
-      // Still show it even if preload fails
-      productImg.src = src;
-      productImg.classList.add('is-visible');
-    };
-    next.src = src;
-  }
-
+ 
   function showOverlay() {
-    loadProduct(productIndex);
     requestAnimationFrame(() => {
       overlay.classList.remove('is-hidden');
     });
   }
-
+ 
   function hideOverlay() {
     overlay.classList.add('is-hidden');
   }
-
-  // Initial product
-  productImg.src = leader.products[0];
-  productImg.classList.add('is-visible');
-
-  // Image rotation: 4 products spread evenly across 7 seconds = 1750ms per image
-  const imageRotationMs = test ? 1000 : 1750;
-
+ 
+  // Image rotation: 4 products over 30s = 7.5s each. Feels clean, lets each image breathe.
+  const imageRotationMs = test ? 2000 : 7500;
+ 
+  // Show first product immediately
+  loadProduct(0, true);
+ 
   if (always) {
     // Stay visible, keep cycling products
     showOverlay();
@@ -630,14 +653,16 @@
   } else {
     // Timed popup loop: 30s visible, 5 min hidden, rotate images during visible window
     let rotationInterval = null;
-
+ 
     function runCycle() {
-      cycleProduct();
+      // Reset to first product for each appearance cycle
+      productIndex = 0;
+      loadProduct(0, false);
       showOverlay();
-
+ 
       // Rotate images while visible
       rotationInterval = setInterval(cycleProduct, imageRotationMs);
-
+ 
       setTimeout(() => {
         hideOverlay();
         if (rotationInterval) {
@@ -646,7 +671,7 @@
         }
       }, displayDuration * 1000);
     }
-
+ 
     // Start first cycle after short delay so it's visible on load
     setTimeout(runCycle, 2000);
     setInterval(runCycle, cycleInterval * 1000);
