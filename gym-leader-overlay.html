@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Leader Stream Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #22e06b;
+    --accent-deep: #0f8839;
+    --accent-glow: rgba(34, 224, 107, 0.4);
+    --bg-card: rgba(8, 8, 12, 0.92);
+    --bg-deep: rgba(3, 3, 5, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --text: #f5f5f5;
+    --text-dim: #a8a8b0;
+    --text-faint: #6a6a72;
+    --red: #ef4444;
+
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --display: 'Anton', sans-serif;
+    --body: 'Inter Tight', system-ui, sans-serif;
+  }
+
+  body[data-leader="blisy"] {
+    --accent: #3b82f6;
+    --accent-deep: #1d4ed8;
+    --accent-glow: rgba(59, 130, 246, 0.4);
+  }
+
+  body[data-leader="nexus"] {
+    --accent: #fde047;
+    --accent-deep: #ca8a04;
+    --accent-glow: rgba(253, 224, 71, 0.5);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Position wrapper */
+  .overlay {
+    position: fixed;
+    width: 600px;
+    padding: 18px;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+  }
+
+  .overlay[data-position="bl"] { bottom: 0; left: 0; }
+  .overlay[data-position="br"] { bottom: 0; right: 0; }
+  .overlay[data-position="tl"] { top: 0; left: 0; }
+  .overlay[data-position="tr"] { top: 0; right: 0; }
+
+  /* Slide animations per position */
+  .overlay[data-position="bl"].is-hidden { transform: translateX(-110%); opacity: 0; }
+  .overlay[data-position="br"].is-hidden { transform: translateX(110%); opacity: 0; }
+  .overlay[data-position="tl"].is-hidden { transform: translateX(-110%); opacity: 0; }
+  .overlay[data-position="tr"].is-hidden { transform: translateX(110%); opacity: 0; }
+
+  /* Card */
+  .card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 18px;
+    padding: 18px;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow:
+      0 20px 48px rgba(0, 0, 0, 0.6),
+      0 0 32px var(--accent-glow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Accent top bar */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow: 0 0 12px var(--accent-glow);
+    z-index: 5;
+  }
+
+  /* Subtle accent aura inside card */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 15% 50%, var(--accent-glow), transparent 60%);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== IMAGE SIDE ===== */
+  .image-slot {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .image-slot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, var(--accent) 0%, transparent 65%);
+    opacity: 0.15;
+    z-index: 1;
+  }
+
+  .image-slot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 14px 14px;
+    z-index: 1;
+  }
+
+  .product-image {
+    position: relative;
+    z-index: 3;
+    max-width: 86%;
+    max-height: 86%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5)) drop-shadow(0 0 14px var(--accent-glow));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .product-image.is-visible {
+    opacity: 1;
+  }
+
+  /* ===== ATMOSPHERE ===== */
+  .atmosphere {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Grass leaves */
+  body[data-leader="pokeaim"] .atmosphere-item {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    opacity: 0;
+    border-radius: 0 100% 0 100%;
+    filter: blur(0.3px);
+  }
+  body[data-leader="pokeaim"] .atmosphere-item:nth-child(1) { top: -10px; left: 15%; animation: leaf-fall 7s infinite linear; }
+  body[data-leader="pokeaim"] .atmosphere-item:nth-child(2) { top: -10px; left: 45%; animation: leaf-fall 9s infinite linear; animation-delay: 1.5s; }
+  body[data-leader="pokeaim"] .atmosphere-item:nth-child(3) { top: -10px; left: 75%; animation: leaf-fall 8s infinite linear; animation-delay: 3s; }
+  body[data-leader="pokeaim"] .atmosphere-item:nth-child(4) { top: -10px; left: 30%; animation: leaf-fall 10s infinite linear; animation-delay: 4.5s; }
+  body[data-leader="pokeaim"] .atmosphere-item:nth-child(5) { top: -10px; left: 60%; animation: leaf-fall 8.5s infinite linear; animation-delay: 6s; }
+
+  @keyframes leaf-fall {
+    0% { transform: translateY(0) rotate(0); opacity: 0; }
+    10% { opacity: 0.7; }
+    90% { opacity: 0.7; }
+    100% { transform: translateY(160px) rotate(540deg); opacity: 0; }
+  }
+
+  /* Water bubbles */
+  body[data-leader="blisy"] .atmosphere-item {
+    position: absolute;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), var(--accent));
+    opacity: 0;
+  }
+  body[data-leader="blisy"] .atmosphere-item:nth-child(1) { left: 15%; width: 7px; height: 7px; animation: bubble-rise 6s infinite linear; }
+  body[data-leader="blisy"] .atmosphere-item:nth-child(2) { left: 35%; width: 5px; height: 5px; animation: bubble-rise 8s infinite linear; animation-delay: 1.5s; }
+  body[data-leader="blisy"] .atmosphere-item:nth-child(3) { left: 55%; width: 8px; height: 8px; animation: bubble-rise 7s infinite linear; animation-delay: 3s; }
+  body[data-leader="blisy"] .atmosphere-item:nth-child(4) { left: 75%; width: 6px; height: 6px; animation: bubble-rise 9s infinite linear; animation-delay: 1s; }
+  body[data-leader="blisy"] .atmosphere-item:nth-child(5) { left: 90%; width: 4px; height: 4px; animation: bubble-rise 10s infinite linear; animation-delay: 2.5s; }
+
+  @keyframes bubble-rise {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    50% { transform: translateY(-90px) translateX(8px); }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-180px) translateX(-4px); opacity: 0; }
+  }
+
+  /* Electric sparks */
+  body[data-leader="nexus"] .atmosphere-item {
+    position: absolute;
+    width: 1.5px;
+    background: linear-gradient(180deg, transparent, var(--accent) 50%, transparent);
+    box-shadow: 0 0 6px var(--accent);
+    opacity: 0;
+  }
+  body[data-leader="nexus"] .atmosphere-item:nth-child(1) { left: 20%; top: 20%; height: 16px; animation: spark-flash 4s infinite; }
+  body[data-leader="nexus"] .atmosphere-item:nth-child(2) { left: 50%; top: 60%; height: 12px; animation: spark-flash 5s infinite; animation-delay: 1s; }
+  body[data-leader="nexus"] .atmosphere-item:nth-child(3) { left: 75%; top: 30%; height: 20px; animation: spark-flash 6s infinite; animation-delay: 2s; }
+  body[data-leader="nexus"] .atmosphere-item:nth-child(4) { left: 85%; top: 70%; height: 14px; animation: spark-flash 3.5s infinite; animation-delay: 0.5s; }
+  body[data-leader="nexus"] .atmosphere-item:nth-child(5) { left: 40%; top: 15%; height: 10px; animation: spark-flash 4.5s infinite; animation-delay: 1.5s; }
+
+  @keyframes spark-flash {
+    0%, 100% { opacity: 0; }
+    50%, 54% { opacity: 1; }
+    52% { opacity: 0.3; }
+  }
+
+  /* ===== CONTENT SIDE ===== */
+  .content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  /* Team tag header */
+  .team-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .team-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  .team-icon {
+    width: 11px;
+    height: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .team-name {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid var(--red);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  .live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* Event headline */
+  .event-headline {
+    font-family: var(--display);
+    font-size: 22px;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  .event-headline-accent {
+    color: var(--accent);
+  }
+
+  /* Action rows */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+  }
+
+  .action-bullet {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 9px;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  .action-text-accent {
+    color: var(--accent);
+    font-weight: 800;
+  }
+
+  /* Code box */
+  .code-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 13px;
+    background: var(--bg-deep);
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .code-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+    transform: translateX(-100%);
+    animation: code-shimmer 3.5s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes code-shimmer {
+    0% { transform: translateX(-100%); }
+    50%, 100% { transform: translateX(200%); }
+  }
+
+  .code-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    position: relative;
+    z-index: 2;
+  }
+
+  .code-value {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  .code-percent {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    padding: 4px 9px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Support line */
+  .support-line {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    text-align: center;
+    padding-top: 2px;
+  }
+
+  .support-line strong {
+    color: var(--accent);
+    font-weight: 800;
+  }
+</style>
+</head>
+<body data-leader="pokeaim">
+
+<div class="overlay is-hidden" data-position="bl">
+  <div class="card">
+    <!-- Image side -->
+    <div class="image-slot">
+      <div class="atmosphere">
+        <div class="atmosphere-item"></div>
+        <div class="atmosphere-item"></div>
+        <div class="atmosphere-item"></div>
+        <div class="atmosphere-item"></div>
+        <div class="atmosphere-item"></div>
+      </div>
+      <img class="product-image" data-product-image alt="Product">
+    </div>
+
+    <!-- Content side -->
+    <div class="content">
+      <div class="team-row">
+        <div class="team-badge">
+          <svg class="team-icon" data-team-icon viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>
+          </svg>
+          <span class="team-name" data-team-name>TEAM POKEAIM</span>
+        </div>
+        <div class="live-pill">
+          <span class="live-dot"></span>
+          <span>LIVE DROP</span>
+        </div>
+      </div>
+
+      <div class="event-headline">
+        <span data-event-line-1>Gym Leaders</span><br>
+        <span class="event-headline-accent" data-event-line-2>Champions Tournament</span>
+      </div>
+
+      <div class="actions">
+        <div class="action-row">
+          <div class="action-bullet">1</div>
+          <span>Buy anything · <span class="action-text-accent">Enter the tournament</span></span>
+        </div>
+        <div class="action-row">
+          <div class="action-bullet">2</div>
+          <span>Submit one <span class="action-text-accent">Pokemon</span> for my team</span>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <span class="code-label">Code</span>
+        <span class="code-value" data-code>POKEAIM</span>
+        <span class="code-percent" data-percent>15% OFF</span>
+      </div>
+
+      <div class="support-line">
+        <strong>100%</strong> of merch profits go directly to me
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const params = new URLSearchParams(window.location.search);
+
+  // Leader config
+  const LEADERS = {
+    pokeaim: {
+      name: 'TEAM POKEAIM',
+      code: 'AIM',
+      icon: '<path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>',
+      products: [
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Untitled-1_0000_Layer-2_f8203c1e-22a1-487b-87e1-264f7d5a8ea6.png?v=1776456383',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Layer-38_0002_Layer-40_81b13235-c259-4ce1-b9c6-0925de75f3eb.png?v=1776458610',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Pokeaim-Deskmat-ProdImage_edd09b9c-589a-4e18-b0b4-af20baed84b0.png?v=1776455562',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Pokeaim-Aura-IS.png?v=1776455056'
+      ]
+    },
+    blisy: {
+      name: 'TEAM BLISY',
+      code: 'BLISY',
+      icon: '<path d="M12 2c-1 4-7 10-7 14a7 7 0 0014 0c0-4-6-10-7-14z"/>',
+      products: [
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Untitled-1_0001_Layer-2.png?v=1776456148',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Layer-37_0002_Layer-39.png?v=1776455551',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Blisy-Deskmat-ProdImage.png?v=1776455301',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Blisy-BlueCR-IS.png?v=1776455051'
+      ]
+    },
+    nexus: {
+      name: 'TEAM NEXUS',
+      code: 'NEXUS',
+      icon: '<path d="M13 2L4.09 12.97 11 13l-1 9 8.91-10.97L12 11l1-9z"/>',
+      products: [
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Untitled-1_0001_Layer-1_1_a8e633e6-0940-459d-9aaa-789c8b94bd00.png?v=1776456773',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Layer-36_0002_Layer-38.png?v=1776458462',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/Untitleddesign_37.png?v=1776460032',
+        'https://cdn.shopify.com/s/files/1/0459/6036/4189/files/NumbNexus-Electric-IS_1.png?v=1776459623'
+      ]
+    }
+  };
+
+  // Parse parameters
+  const leaderKey = (params.get('leader') || 'pokeaim').toLowerCase();
+  const leader = LEADERS[leaderKey] || LEADERS.pokeaim;
+
+  const position = (params.get('position') || 'bl').toLowerCase();
+  const percent = params.get('percent') || '15';
+  const codeOverride = params.get('code');
+  const always = params.get('always') === '1';
+  const test = params.get('test') === '1';
+
+  // Timing (seconds): 30s visible, 5 min (300s) hidden = 330s total between appearances
+  const displayDuration = test ? 6 : 30;
+  const cycleInterval = test ? 8 : 330;
+
+  // Elements
+  const body = document.body;
+  const overlay = document.querySelector('.overlay');
+  const productImg = document.querySelector('[data-product-image]');
+  const teamNameEl = document.querySelector('[data-team-name]');
+  const teamIconEl = document.querySelector('[data-team-icon]');
+  const codeEl = document.querySelector('[data-code]');
+  const percentEl = document.querySelector('[data-percent]');
+
+  // Apply leader theme
+  body.dataset.leader = leaderKey;
+  teamNameEl.textContent = leader.name;
+  teamIconEl.innerHTML = leader.icon;
+  codeEl.textContent = (codeOverride || leader.code).toUpperCase();
+  percentEl.textContent = percent + '% OFF';
+
+  // Position
+  overlay.dataset.position = ['bl', 'br', 'tl', 'tr'].includes(position) ? position : 'bl';
+
+  // Product rotation
+  let productIndex = 0;
+  function cycleProduct() {
+    productIndex = (productIndex + 1) % leader.products.length;
+    loadProduct(productIndex);
+  }
+
+  function loadProduct(i) {
+    const src = leader.products[i];
+    if (!src) return;
+
+    // Fade out, swap image, fade in
+    productImg.classList.remove('is-visible');
+    const next = new Image();
+    next.onload = () => {
+      productImg.src = src;
+      requestAnimationFrame(() => {
+        productImg.classList.add('is-visible');
+      });
+    };
+    next.onerror = () => {
+      // Still show it even if preload fails
+      productImg.src = src;
+      productImg.classList.add('is-visible');
+    };
+    next.src = src;
+  }
+
+  function showOverlay() {
+    loadProduct(productIndex);
+    requestAnimationFrame(() => {
+      overlay.classList.remove('is-hidden');
+    });
+  }
+
+  function hideOverlay() {
+    overlay.classList.add('is-hidden');
+  }
+
+  // Initial product
+  productImg.src = leader.products[0];
+  productImg.classList.add('is-visible');
+
+  // Image rotation: 4 products spread evenly across 7 seconds = 1750ms per image
+  const imageRotationMs = test ? 1000 : 1750;
+
+  if (always) {
+    // Stay visible, keep cycling products
+    showOverlay();
+    setInterval(cycleProduct, imageRotationMs);
+  } else {
+    // Timed popup loop: 30s visible, 5 min hidden, rotate images during visible window
+    let rotationInterval = null;
+
+    function runCycle() {
+      cycleProduct();
+      showOverlay();
+
+      // Rotate images while visible
+      rotationInterval = setInterval(cycleProduct, imageRotationMs);
+
+      setTimeout(() => {
+        hideOverlay();
+        if (rotationInterval) {
+          clearInterval(rotationInterval);
+          rotationInterval = null;
+        }
+      }, displayDuration * 1000);
+    }
+
+    // Start first cycle after short delay so it's visible on load
+    setTimeout(runCycle, 2000);
+    setInterval(runCycle, cycleInterval * 1000);
+  }
+})();
+</script>
+</body>
+</html>
